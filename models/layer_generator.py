@@ -1,7 +1,7 @@
 from torch import nn
 
 from models import common
-from utils import upsample_space, operations
+from utils import upsample_space
 
 
 def encoder_layer(input_channel, output_channel, kernel_size, bias, pad, activate, downsample_mode):
@@ -128,27 +128,27 @@ def upsample_layer(input_channel, output_channel, upsample_params: upsample_spac
     activation_operate = upsample_space.ACTIVATION[upsample_params.activation]
 
     # 根据参数生成对应的上采样层
-    primitive_layer = operations.UPSAMPLE_PRIMITIVE_OPS[primitive_operate](input_channel=input_channel,
-                                                                           output_channel=output_channel,
-                                                                           kernel_size=kernel_size,
-                                                                           act_op=activation_operate)
+    primitive_layer = upsample_space.UPSAMPLE_PRIMITIVE_OPTIONS[primitive_operate](input_channel=input_channel,
+                                                                                   output_channel=output_channel,
+                                                                                   kernel_size=kernel_size,
+                                                                                   act_op=activation_operate)
 
     # 生成对应的卷积层
     if primitive_operate == 'pixel_shuffle':
-        conv_layer = operations.UPSAMPLE_CONV_OPS[conv_operate](input_channel=int(input_channel / 4),
-                                                                output_channel=output_channel,
-                                                                kernel_size=kernel_size,
-                                                                act_op=activation_operate)
+        conv_layer = upsample_space.UPSAMPLE_CONV_OPTIONS[conv_operate](input_channel=input_channel // 4,
+                                                                        output_channel=output_channel,
+                                                                        kernel_size=kernel_size,
+                                                                        act_op=activation_operate)
     elif primitive_operate == 'trans_conv':
-        conv_layer = operations.UPSAMPLE_CONV_OPS[conv_operate](input_channel=output_channel,
-                                                                output_channel=output_channel,
-                                                                kernel_size=kernel_size,
-                                                                act_op=activation_operate)
+        conv_layer = upsample_space.UPSAMPLE_CONV_OPTIONS[conv_operate](input_channel=output_channel,
+                                                                        output_channel=output_channel,
+                                                                        kernel_size=kernel_size,
+                                                                        act_op=activation_operate)
     else:
-        conv_layer = operations.UPSAMPLE_CONV_OPS[conv_operate](input_channel=input_channel,
-                                                                output_channel=output_channel,
-                                                                kernel_size=kernel_size,
-                                                                act_op=activation_operate)
+        conv_layer = upsample_space.UPSAMPLE_CONV_OPTIONS[conv_operate](input_channel=input_channel,
+                                                                        output_channel=output_channel,
+                                                                        kernel_size=kernel_size,
+                                                                        act_op=activation_operate)
 
     layer.add_module('0:primitive', primitive_layer)
     layer.add_module('1:conv', conv_layer)
