@@ -78,23 +78,23 @@ class Swish(nn.Module):
         return x * self.s(x)
 
 
-def act(act_fun='LeakyReLU'):
+def act(activate='LeakyReLU'):
     """
         Either string defining an activation function or module (e.g. nn.ReLU)
     """
-    if isinstance(act_fun, str):
-        if act_fun == 'LeakyReLU':
+    if isinstance(activate, str):
+        if activate == 'LeakyReLU':
             return nn.LeakyReLU(0.2, inplace=True)
-        elif act_fun == 'Swish':
+        elif activate == 'Swish':
             return Swish()
-        elif act_fun == 'ELU':
+        elif activate == 'ELU':
             return nn.ELU()
-        elif act_fun == 'none':
+        elif activate == 'none':
             return nn.Sequential()
         else:
             assert False
     else:
-        return act_fun
+        return activate
 
 
 def bn(num_features):
@@ -106,15 +106,19 @@ def bn(num_features):
     return nn.BatchNorm2d(num_features)
 
 
-def conv(in_f, out_f, kernel_size, stride=1, bias=True, pad='zero', downsample_mode='stride'):
-    """Convolution layer
-    Returns a convolution layer containing downsampling and reflection padding.
+def conv(input_channel, output_channel, kernel_size, stride=1, bias=True, pad='zero', downsample_mode='stride'):
+    """ 根据参数生成一个卷积层
+    返回一个卷积层或一个池化层
 
-    Argument:
-        in_f: the number of input channels
-        out_f: the number of output channels
-        pad: setting padding mode
-        downsample_mode: setting downsample mode
+    :param input_channel: 输入数据的通道数
+    :param output_channel: 输出数据的通道数
+    :param kernel_size: 卷积核大小
+    :param stride: 步长
+    :param bias: 是否需要偏置
+    :param pad: 填充类型
+    :param downsample_mode: 下采样的类型
+
+    :return: 返回一个nn.Module
     """
     downsampler = None
     if stride != 1 and downsample_mode != 'stride':
@@ -124,7 +128,7 @@ def conv(in_f, out_f, kernel_size, stride=1, bias=True, pad='zero', downsample_m
         elif downsample_mode == 'max':
             downsampler = nn.MaxPool2d(stride, stride)
         elif downsample_mode in ['lanczos2', 'lanczos3']:
-            downsampler = Downsampler(n_planes=out_f, factor=stride, kernel_type=downsample_mode, phase=0.5,
+            downsampler = Downsampler(n_planes=output_channel, factor=stride, kernel_type=downsample_mode, phase=0.5,
                                       preserve_size=True)
         else:
             assert False
@@ -137,7 +141,7 @@ def conv(in_f, out_f, kernel_size, stride=1, bias=True, pad='zero', downsample_m
         padding = nn.ReflectionPad2d(to_pad)
         to_pad = 0
 
-    convolver = nn.Conv2d(in_f, out_f, kernel_size, stride, padding=to_pad, bias=bias)
+    convolver = nn.Conv2d(input_channel, output_channel, kernel_size, stride, padding=to_pad, bias=bias)
 
     layers = filter(lambda x: x is not None, [padding, convolver, downsampler])
     return nn.Sequential(*layers)
