@@ -7,8 +7,6 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 
 from utils.common_utils import print_images, get_noise, get_params, optimize
-from utils.max_min_normalize import max_min_normalize
-from utils.psnr import psnr_gpu
 
 data_type = torch.cuda.FloatTensor
 
